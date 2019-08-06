@@ -120,14 +120,19 @@ fn re_search(
 }
 
 fn do_match(vm: &VirtualMachine, regex: &PyPattern, search_text: &str) -> PyResult {
-    // TODO: implement match!
-    do_search(vm, regex, search_text)
+    //  I wish there were a better way to do this; I don't think there is
+    let pat = r"\A".to_owned() + regex.regex.as_str();
+    let regex = Regex::new(&pat).unwrap();
+    match regex.find(search_text.as_bytes()) {
+        Some(result) => create_match(vm, &result),
+        None => Ok(vm.get_none()),
+    }
 }
 
 fn do_search(vm: &VirtualMachine, regex: &PyPattern, search_text: &str) -> PyResult {
     match regex.regex.find(search_text.as_bytes()) {
-        None => Ok(vm.get_none()),
         Some(result) => create_match(vm, &result),
+        None => Ok(vm.get_none()),
     }
 }
 

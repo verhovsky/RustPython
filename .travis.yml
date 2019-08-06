@@ -150,7 +150,7 @@ matrix:
         - JOBCACHE=7
         - TRAVIS_RUST_VERSION=stable
 
-    - name: Ensure compilation on Redox OS with Redoxer
+    - name: Build and test on Redox OS
       # language: minimal so that it actually uses bionic rather than xenial;
       # rust isn't yet available on bionic
       language: minimal
@@ -174,9 +174,11 @@ matrix:
       install:
         - if ! command -v redoxer; then cargo install redoxfs redoxer; fi
         - redoxer install
+        - redoxer exec true # download the vm image
       script:
         - bash redox/uncomment-cargo.sh
         - redoxer build --verbose
+        - redoxer test --verbose --all
         - bash redox/comment-cargo.sh
       before_cache:
         - |
