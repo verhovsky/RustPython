@@ -41,8 +41,11 @@ for p in CPYTHON_LIB.rglob("*.py"):
                     imports.append(node.module)
         # Count "collections.abc" as "collections"
         imports = [i.split(".")[0] for i in imports]
+        # If the library is a directory with multiple files, imported might
+        # already contain something.
+        new_imports = set(imported.get(lib, [])) | set(imports)
         # Don't count self imports
-        imported[lib] = sorted(set(imports) | set(imported.get(lib, [])) - {lib})
+        imported[lib] = sorted(new_imports - {lib, "__main__"})
 
 # print(json.dumps(imported, indent=4))
 
@@ -60,9 +63,7 @@ def flatten(list_of_lists):
     return itertools.chain.from_iterable(list_of_lists)
 
 
-cpython_keys = sorted(
-    {s.removesuffix(".py") for s in imported} | set(flatten(imported.values()))
-)
+cpython_keys = sorted({s.removesuffix(".py") for s in imported} | set(flatten(imported.values())))
 # Edit not_impl_gen.py to output a json dict of names then
 # run this command in the RustPython repo:
 # ./whats_left.sh | tail -n 1 > left.json
@@ -84,23 +85,19 @@ cpython_keys = {k: i for i, k in enumerate(cpython_keys)}
 nodes = []
 key_idx = {}
 for i, k in enumerate(cpython_keys):
-    nodes.append(
-        {"name": k, "group": 1, "class": key_status.get(k, "unknown_to_rustpython")}
-    )
+    nodes.append({"name": k, "group": 1, "class": key_status.get(k, "unknown_to_rustpython")})
     key_idx[k] = i
-for i, k in enumerate(
-    [k for k in key_status if k not in cpython_keys], start=len(nodes)
-):
+for i, k in enumerate([k for k in key_status if k not in cpython_keys], start=len(nodes)):
     nodes.append({"name": k, "group": 1, "class": "unknown_to_cpython"})
     key_idx[k] = i
 
 links = []
 for src, dependencies in imported.items():
     src = src.removesuffix(".py")
-    if src in top_most_imported:
-        continue
+    # if src not in statuses["not_implemented"]:
+    #     continue
     for dep in dependencies:
-        if dep in top_most_imported:
+        if dep not in (statuses["not_implemented"]) and dep in key_status:
             continue
         links.append(
             {
