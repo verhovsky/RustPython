@@ -252,6 +252,7 @@ def compare():
 
     rustpymods = {mod: dir_of_mod_or_error(mod) for mod in mod_names}
 
+    implemented = {}
     not_implemented = {}
     failed_to_import = {}
     missing_items = {}
@@ -274,10 +275,13 @@ def compare():
                 if rustpymod[item] != cpymod[item]
                 and not isinstance(cpymod[item], Exception)
             ]
-            if mod_missing_items:
-                missing_items[modname] = mod_missing_items
-            if mod_mismatched_items:
-                mismatched_items[modname] = mod_mismatched_items
+            if mod_missing_items or mod_mismatched_items:
+                if mod_missing_items:
+                    missing_items[modname] = mod_missing_items
+                if mod_mismatched_items:
+                    mismatched_items[modname] = mod_mismatched_items
+            else:
+                implemented[modname] = None
 
     # missing from builtins
     for module, missing_methods in not_implementeds.items():
@@ -297,16 +301,30 @@ def compare():
             print(f"{item} {rustpy_value} != {cpython_value}")
 
     result = {
+        "implemented": implemented,
         "not_implemented": not_implemented,
         "failed_to_import": failed_to_import,
         "missing_items": missing_items,
         "mismatched_items": mismatched_items,
     }
 
-    print()
-    print("out of", len(cpymods), "modules:")
-    for error_type, modules in result.items():
-        print(" ", error_type, len(modules))
+    import json
+
+    print(
+        json.dumps(
+            {
+                "implemented": list(implemented),
+                "not_implemented": list(not_implemented),
+                "failed_to_import": list(failed_to_import),
+                "missing_items": list(missing_items),
+                "mismatched_items": list(mismatched_items),
+            }
+        )
+    )
+    # print()
+    # print("out of", len(cpymods), "modules:")
+    # for error_type, modules in result.items():
+    #     print(" ", error_type, len(modules))
 
 
 def remove_one_indent(s):

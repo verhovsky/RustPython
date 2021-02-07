@@ -19,3 +19,6 @@ flamescope.json
 
 extra_tests/snippets/resources
 extra_tests/snippets/not_impl.py
+
+vis_not_impl/data1.json
+vis_not_impl/left.json

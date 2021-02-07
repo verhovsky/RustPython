@@ -18,9 +18,9 @@ export RUSTPYTHONPATH=Lib
 )
 
 # This takes a while
-if command -v black &> /dev/null; then
-    black -q extra_tests/snippets/not_impl.py
-fi
+# if command -v black &> /dev/null; then
+#     black -q extra_tests/snippets/not_impl.py
+# fi
 
 # show the building first, so people aren't confused why it's taking so long to
 # run whats_left
