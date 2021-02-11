@@ -55,7 +55,9 @@ args = parse_args()
 
 
 sys.path = [
-    path for path in sys.path if ("site-packages" not in path and "dist-packages" not in path)
+    path
+    for path in sys.path
+    if ("site-packages" not in path and "dist-packages" not in path)
 ]
 
 
@@ -68,7 +70,9 @@ def attr_is_not_inherited(type_, attr):
 
 
 def extra_info(obj):
-    if callable(obj):
+    # RustPython doesn't support __text_signature__ for getting signatures of builtins
+    # https://github.com/RustPython/RustPython/issues/2410
+    if callable(obj) and not inspect._signature_is_builtin(obj):
         try:
             sig = str(inspect.signature(obj))
             # remove function memory addresses
@@ -292,15 +296,20 @@ def compare():
         if rustpymod is None:
             result["not_implemented"][modname] = None
         elif isinstance(rustpymod, Exception):
-            result["failed_to_import"][modname] = rustpymod.__class__.__name__ + str(rustpymod)
+            result["failed_to_import"][modname] = rustpymod.__class__.__name__ + str(
+                rustpymod
+            )
         else:
             implemented_items = sorted(set(cpymod) & set(rustpymod))
             mod_missing_items = set(cpymod) - set(rustpymod)
-            mod_missing_items = sorted(f"{modname}.{item}" for item in mod_missing_items)
+            mod_missing_items = sorted(
+                f"{modname}.{item}" for item in mod_missing_items
+            )
             mod_mismatched_items = [
                 (f"{modname}.{item}", rustpymod[item], cpymod[item])
                 for item in implemented_items
-                if rustpymod[item] != cpymod[item] and not isinstance(cpymod[item], Exception)
+                if rustpymod[item] != cpymod[item]
+                and not isinstance(cpymod[item], Exception)
             ]
 
             if mod_missing_items or mod_mismatched_items:
