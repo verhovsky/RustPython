@@ -27,6 +27,8 @@ from pydoc import ModuleScanner
 
 GENERATED_FILE = "extra_tests/snippets/not_impl.py"
 
+# TODO: check that we're running under CPython and not RustPython
+
 sys.path = [
     path for path in sys.path if ("site-packages" not in path and "dist-packages" not in path)
 ]
