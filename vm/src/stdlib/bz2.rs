@@ -1,4 +1,5 @@
 use std::fmt;
+use std::io::Write;
 
 use crate::builtins::pytype::PyTypeRef;
 use crate::byteslike::PyBytesLike;
@@ -6,9 +7,14 @@ use crate::common::lock::PyMutex;
 use crate::function::OptionalArg;
 use crate::pyobject::{PyClassImpl, PyObjectRef, PyResult, PyValue, StaticType};
 use crate::VirtualMachine;
+use bzip2::write::BzEncoder;
+use bzip2_rs::decoder::{Decoder, ReadState, WriteState};
 
 struct DecompressorState {
-    decompressor: bzip2::Decompress,
+    eof: bool,
+    needs_input: bool,
+    unused_data: Vec<u8>,
+    decoder: Decoder,
 }
 
 #[pyclass(module = "_bz2", name = "BZ2Decompressor")]
@@ -34,30 +40,78 @@ impl BZ2Decompressor {
     fn decompress(
         &self,
         data: PyBytesLike,
-        // TODO: PyRefInt
-        _max_length: OptionalArg<i32>,
+        // TODO: PyIntRef
+        max_length: OptionalArg<i32>,
         vm: &VirtualMachine,
     ) -> PyResult {
+        // TODO: make const
+        let bufsiz = 8192;
+        let max_length = max_length.unwrap_or(-1);
+        let max_length = if max_length < 0 || max_length >= bufsiz {
+            bufsiz
+        } else {
+            max_length
+        };
+        // println!("{}", max_length);
+
         let mut state = self.state.lock();
-        let DecompressorState { decompressor } = &mut *state;
+        let DecompressorState {
+            eof,
+            needs_input,
+            unused_data,
+            decoder,
+        } = &mut *state;
 
         data.with_ref(|data| {
-            // TODO: need to resize?
-            let mut out = Vec::new();
+            match decoder.write(&data).unwrap() {
+                WriteState::Written(written) => {
+                    println!("wrote {} byte(s)", written);
+                    Ok(written)
+                }
+                // TODO
+                WriteState::NeedsRead => {
+                    return Err(vm.new_runtime_error("couldn't write data".to_owned()))
+                }
+            }
+        });
 
-            // TODO: respect max_length
-            // TODO: handle Err
-            let status = decompressor.decompress_vec(data, &mut out).unwrap();
-            println!("{:?}", status);
-            Ok(vm.ctx.new_bytes(out))
-        })
+        // TODO: check that max_length = 0 works correctly
+        // TODO
+        // let mut buf = Vec::with_capacity(max_length as usize);
+        let mut buf = [0; 8192];
+        match decoder.read(&mut buf) {
+            Ok(ReadState::NeedsWrite(space)) => {
+                println!("NeedsWrite {:?}", space);
+                *needs_input = true;
+            }
+            Ok(ReadState::Read(n)) => {
+                println!("Read {:?}", n);
+                println!("Data {:?}", buf);
+                // `n` uncompressed bytes have been read into `buf`
+                // TODO: need input?
+                *needs_input = false;
+                // TODO: ask author to make this public.
+                // we need to set eof = true as soon as we reach the end of the file.
+                // if decoder.eof {
+                //     *eof = true;
+                // }
+                return Ok(vm.ctx.new_bytes(buf[..n].to_vec()));
+            }
+            Ok(ReadState::Eof) => {
+                println!("EOF");
+                *needs_input = false;
+                *eof = true;
+            }
+            // TODO
+            _ => return Err(vm.new_runtime_error("couldn't read bz2".to_owned())),
+        }
+        Ok(vm.ctx.new_bytes(b"".to_vec()))
     }
 
     #[pyproperty]
     fn eof(&self, vm: &VirtualMachine) -> PyObjectRef {
-        // True if the end-of-stream marker has been reached.
-        // TODO
-        vm.ctx.new_bool(true)
+        let state = self.state.lock();
+        vm.ctx.new_bool(state.eof)
     }
 
     #[pyproperty]
@@ -74,7 +128,8 @@ impl BZ2Decompressor {
         // False if the decompress() method can provide more
         // decompressed data before requiring new uncompressed input.
         // TODO
-        vm.ctx.new_bool(false)
+        let state = self.state.lock();
+        vm.ctx.new_bool(state.needs_input)
     }
 
     // TODO: mro()?
@@ -83,14 +138,17 @@ impl BZ2Decompressor {
 fn _bz2_BZ2Decompressor(vm: &VirtualMachine) -> PyResult<BZ2Decompressor> {
     Ok(BZ2Decompressor {
         state: PyMutex::new(DecompressorState {
-            decompressor: bzip2::Decompress::new(false),
+            eof: false,
+            needs_input: true,
+            unused_data: Vec::new(),
+            decoder: Decoder::new(),
         }),
     })
 }
 
 struct CompressorState {
     flushed: bool,
-    compressor: bzip2::Compress,
+    encoder: Option<BzEncoder<Vec<u8>>>,
 }
 
 #[pyclass(module = "_bz2", name = "BZ2Compressor")]
@@ -110,51 +168,36 @@ impl PyValue for BZ2Compressor {
     }
 }
 
+// TODO: return partial results from compress() instead of returning everything in flush()
 #[pyimpl]
 impl BZ2Compressor {
     #[pymethod]
     fn compress(&self, data: PyBytesLike, vm: &VirtualMachine) -> PyResult {
-        // TODO: error if flushed
         let mut state = self.state.lock();
-        let CompressorState {
-            flushed,
-            compressor,
-        } = &mut *state;
+        if state.flushed {
+            return Err(vm.new_value_error("Compressor has been flushed".to_owned()));
+        }
+
+        let CompressorState { flushed, encoder } = &mut *state;
 
         // TODO: handle Err
-        data.with_ref(|data| {
-            // TODO: need to resize?
-            let mut out = Vec::new();
-
-            // TODO: respect max_length
-            // TODO: handle Err
-            let status = compressor
-                .compress_vec(data, &mut out, bzip2::Action::Run)
-                .unwrap();
-            println!("{:?}", status);
-            Ok(vm.ctx.new_bytes(out))
-        })
+        data.with_ref(|input_bytes| encoder.as_mut().unwrap().write_all(input_bytes).unwrap());
+        Ok(vm.ctx.new_bytes(Vec::new()))
     }
 
     #[pymethod]
     fn flush(&self, vm: &VirtualMachine) -> PyResult {
         let mut state = self.state.lock();
-        let CompressorState {
-            flushed,
-            compressor,
-        } = &mut *state;
+        if state.flushed {
+            return Err(vm.new_value_error("Repeated call to flush()".to_owned()));
+        }
 
-        let mut out = Vec::new();
-        // TODO: Flush or Finish?
+        let CompressorState { flushed, encoder } = &mut *state;
+
         // TODO: handle Err
-        let status = compressor
-            .compress_vec(&[], &mut out, bzip2::Action::Flush)
-            .unwrap();
-        println!("{:?}", status);
-
-        *flushed = true;
-
-        Ok(vm.ctx.new_bytes(out))
+        Ok(vm
+            .ctx
+            .new_bytes(encoder.take().unwrap().finish().unwrap().to_vec()))
     }
 }
 
@@ -167,14 +210,13 @@ fn _bz2_BZ2Compressor(
     // compresslevel.unwrap_or(bzip2::Compression::best().level().try_into().unwrap());
     let level = match compresslevel {
         valid_level @ 1..=9 => bzip2::Compression::new(valid_level as u32),
-        // TODO
-        _ => return Err(vm.new_value_error("".to_owned())),
+        _ => return Err(vm.new_value_error("compresslevel must be between 1 and 9".to_owned())),
     };
 
     Ok(BZ2Compressor {
         state: PyMutex::new(CompressorState {
             flushed: false,
-            compressor: bzip2::Compress::new(level, 30),
+            encoder: Some(BzEncoder::new(Vec::new(), level)),
         }),
     })
 }

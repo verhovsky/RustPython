@@ -234,6 +234,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "bzip2-rs"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "89270218d91b4ecd44e29f8b6bf79ec011c6e65ec7d9cfffa34521f70d65601c"
+dependencies = [
+ "crc32fast",
+ "tinyvec",
+]
+
+[[package]]
 name = "bzip2-sys"
 version = "0.1.10+1.0.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1987,6 +1997,7 @@ dependencies = [
  "blake2",
  "bstr",
  "bzip2",
+ "bzip2-rs",
  "caseless",
  "cfg-if 1.0.0",
  "chrono",
