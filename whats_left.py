@@ -16,6 +16,7 @@
 # it has available and compares that against the first dictionary we generated.
 # We then run this second generated script with RustPython.
 
+import argparse
 import re
 import os
 import sys
@@ -23,11 +24,35 @@ import json
 import warnings
 import inspect
 import subprocess
+import platform
 from pydoc import ModuleScanner
 
 GENERATED_FILE = "extra_tests/snippets/not_impl.py"
 
-# TODO: check that we're running under CPython and not RustPython
+implementation = platform.python_implementation()
+if implementation != "CPython":
+    sys.exit("whats_left.py must be run under CPython, got {implementation} instead")
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="Process some integers.")
+    parser.add_argument(
+        "--mismatched-values",
+        action="store_true",
+        help="print functions whose signatures don't match CPython's",
+    )
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        help="print output as JSON (instead of line by line)",
+    )
+
+    args = parser.parse_args()
+    return args
+
+
+args = parse_args()
+
 
 sys.path = [
     path for path in sys.path if ("site-packages" not in path and "dist-packages" not in path)
@@ -317,6 +342,10 @@ result = subprocess.run(
 # because importing certain modules can print stuff to stdout/stderr
 result = json.loads(result.stdout.splitlines()[-1])
 
+if args.json:
+    print(json.dumps(result))
+    sys.exit()
+
 modules = result["modules"]
 builtins = result["builtins"]
 
@@ -333,6 +362,7 @@ for modname, exception in modules["failed_to_import"].items():
 for modname, missing in modules["missing_items"].items():
     for item in missing:
         print(item)
-for modname, mismatched in modules["mismatched_items"].items():
-    for (item, rustpy_value, cpython_value) in mismatched:
-        print(f"{item} {rustpy_value} != {cpython_value}")
+if args.mismatched_values:
+    for modname, mismatched in modules["mismatched_items"].items():
+        for (item, rustpy_value, cpython_value) in mismatched:
+            print(f"{item} {rustpy_value} != {cpython_value}")
