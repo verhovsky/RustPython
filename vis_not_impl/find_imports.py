@@ -101,8 +101,8 @@ for src, dependencies in imported.items():
             continue
         links.append(
             {
-                "source": key_idx[src],
-                "target": key_idx[dep],
+                "source": key_idx[dep],
+                "target": key_idx[src],
                 "value": 1,  # TODO: could set this differently
                 "type": "depends",
             }
