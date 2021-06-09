@@ -2,7 +2,7 @@
 
 # [RustPython](https://rustpython.github.io/)
 
-A Python-3 (CPython >= 3.8.0) Interpreter written in Rust :snake: :scream:
+A Python 3 (CPython >= 3.8) interpreter written in Rust :snake: :scream:
 :metal:.
 
 [![Build Status](https://github.com/RustPython/RustPython/workflows/CI/badge.svg)](https://github.com/RustPython/RustPython/actions?query=workflow%3ACI)
@@ -20,42 +20,42 @@ A Python-3 (CPython >= 3.8.0) Interpreter written in Rust :snake: :scream:
 
 #### Check out our [online demo](https://rustpython.github.io/demo/) running on WebAssembly.
 
-RustPython requires Rust latest stable version (e.g 1.43.0 at May 24th 2020). 
-To check Rust version: `rustc --version` If you wish to update,
-`rustup update stable`.
+RustPython requires the latest stable version of Rust (i.e. 1.53 as of June 17, 2021).
+You can check your Rust version with `rustc --version` and run `rustup update stable` if you need to update.
 
 To build RustPython locally, do the following:
 
     $ git clone https://github.com/RustPython/RustPython
     $ cd RustPython
-      # --release is needed (at least on windows) to prevent stack overflow
     $ cargo run --release demo.py
     Hello, RustPython!
+
+(`--release` is needed (at least on Windows) to prevent stack overflow)
 
 Or use the interactive shell:
 
     $ cargo run --release
-    Welcome to rustpython
+    Welcome to the magnificent RustPython interpreter
     >>>>> 2+2
     4
 
-You can also install and run RustPython with the following:
+You can also install and run RustPython with `cargo`:
 
     $ cargo install --git https://github.com/RustPython/RustPython
     $ rustpython
-    Welcome to the magnificent Rust Python interpreter
+    Welcome to the magnificent RustPython interpreter
     >>>>>
 
-(The `rustpython-*` crates are currently yanked from crates.io due to being out
-of date and not building on newer rust versions; we hope to release a new
+(The `rustpython-*` crates have been yanked from https://crates.io/ due to being out
+of date and not building on newer Rust versions; we hope to release a new
 version Soon™)
 
-If you'd like to make https requests, you can enable the `ssl` feature, which
+If you'd like to make HTTPS requests, you can enable the `ssl` feature, which
 also lets you install the `pip` package manager. Note that on Windows, you may
 need to install OpenSSL, or you can enable the `ssl-vendor` feature instead,
-which compiles OpenSSL for you but requires a C compiler, perl, and `make`.
+which compiles OpenSSL for you but requires a C compiler, Perl, and `make`.
 
-Once you've installed rustpython with SSL support, you can install pip by
+Once you've installed RustPython with SSL support, you can install pip by
 running:
 
     $ rustpython --install-pip
@@ -86,11 +86,11 @@ You can build the WebAssembly WASI file with:
 cargo build --release --target wasm32-wasi --features="freeze-stdlib"
 ```
 
-> Note: we use the `freeze-stdlib` to include the standard library inside the binary.
+> Note: we use `freeze-stdlib` to include the standard library inside the binary.
 
-### JIT (Just in time) compiler
+### JIT compiler
 
-RustPython has an **very** experimental JIT compiler that compile python functions into native code. 
+RustPython has a **very** experimental just-in-time (JIT) compiler that compiles Python functions into native code.
 
 #### Building
 
@@ -130,7 +130,7 @@ information on this.
 
 ## Conference videos
 
-Checkout those talks on conferences:
+Check out these conference talks:
 
 - [FOSDEM 2019](https://www.youtube.com/watch?v=nJDY9ASuiLc)
 - [EuroPython 2018](https://www.youtube.com/watch?v=YMmio0JHy_Y)
@@ -141,12 +141,12 @@ Although RustPython is a fairly young project, a few people have used it to
 make cool projects:
 
 - [pyckitup](https://github.com/pickitup247/pyckitup): a game engine written in
-  rust.
+  Rust.
 - [Robot Rumble](https://github.com/robot-rumble/logic/): an arena-based AI competition platform
 
 ## Goals
 
-- Full Python-3 environment entirely in Rust (not CPython bindings)
+- Full Python 3 environment entirely in Rust (not CPython bindings)
 - A clean implementation without compatibility hacks
 
 ## Documentation
@@ -169,17 +169,17 @@ Documentation HTML files can then be found in the `target/doc` directory.
 ## Contributing
 
 Contributions are more than welcome, and in many cases we are happy to guide
-contributors through PRs or on gitter. Please refer to the
-[development guide](DEVELOPMENT.md) as well for tips on developments.
+contributors through PRs or on [Gitter](gitter). Please refer to the
+[development guide](DEVELOPMENT.md) as well.
 
-With that in mind, please note this project is maintained by volunteers, some of
+With that in mind, please note that this project is maintained by volunteers, some of
 the best ways to get started are below:
 
 Most tasks are listed in the
 [issue tracker](https://github.com/RustPython/RustPython/issues). Check issues
 labeled with `good first issue` if you wish to start coding.
 
-To enhance CPython compatibility, try to increase unittest coverage by checking this article: [How to contribute to RustPython by CPython unittest](https://rustpython.github.io/guideline/2020/04/04/how-to-contribute-by-cpython-unittest.html)
+To enhance CPython compatibility, try to increase unit test coverage by checking this article: [How to contribute to RustPython using CPython's unit tests](https://rustpython.github.io/guideline/2020/04/04/how-to-contribute-by-cpython-unittest.html)
 
 Another approach is to checkout the source code: builtin functions and object
 methods are often the simplest and easiest way to contribute.
@@ -193,7 +193,7 @@ method.
 
 ## Community
 
-Chat with us on [gitter][gitter].
+Chat with us on [Gitter][gitter].
 
 ## Code of conduct
 

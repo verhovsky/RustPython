@@ -1,6 +1,6 @@
 # RustPython
 
-A Python-3 (CPython >= 3.8.0) Interpreter written in Rust.
+A Python 3 (CPython >= 3.8) interpreter written in Rust.
 
 [![Build Status](https://travis-ci.org/RustPython/RustPython.svg?branch=master)](https://travis-ci.org/RustPython/RustPython)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
@@ -17,7 +17,7 @@ A Python-3 (CPython >= 3.8.0) Interpreter written in Rust.
 
 ## Goals
 
--   Full Python-3 environment entirely in Rust (not CPython bindings)
+-   Full Python 3 environment entirely in Rust (not CPython bindings)
 -   A clean implementation without compatibility hacks
 
 ## Quick Documentation
@@ -34,8 +34,8 @@ pyEval(code, options?);
     accessed in Python with the variable `js_vars`. Functions do work, and
     receive the Python kwargs as the `this` argument.
 -   `stdout?`: `"console" | ((out: string) => void) | null`: A function to replace the
-    native print function, and it will be `console.log` when giving `undefined`
-    or "console", and it will be a dumb function when giving null.
+    native print function. If you don't set this value or set it to `"console"` it will default to `console.log`.
+    If you pass in `null` it will be set to a dumb function.
 
 ## License
 

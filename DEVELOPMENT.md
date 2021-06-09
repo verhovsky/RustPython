@@ -1,6 +1,6 @@
 # RustPython Development Guide and Tips
 
-RustPython attracts developers with interest and experience in Rust, Python,
+RustPython attracts developers with an interest and experience in Rust, Python,
 or WebAssembly. Whether you are familiar with Rust, Python, or 
 WebAssembly, the goal of this Development Guide is to give you the basics to
 get set up for developing RustPython and contributing to this project. 
@@ -19,11 +19,11 @@ The contents of the Development Guide include:
 
 RustPython requires the following:
 
-- Rust latest stable version (e.g 1.51.0 as of Apr 2 2021)
-    - To check Rust version: `rustc --version` 
+- Rust, latest stable version (i.e. 1.53 as of June 17, 2021)
+    - To check your Rust version: `rustc --version` 
     - If you have `rustup` on your system, enter to update to the latest
       stable version: `rustup update stable`
-    - If you do not have Rust installed, use [rustup](https://rustup.rs/) to
+    - If you do not have Rust installed, use [`rustup`](https://rustup.rs/) to
       do so.
 - CPython version 3.8 or higher
     - CPython can be installed by your operating system's package manager,

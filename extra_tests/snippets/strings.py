@@ -385,7 +385,7 @@ assert str.__rmod__('%i', 30) == NotImplemented
 assert_raises(TypeError, lambda: str.__rmod__(30, '%i'))
 
 # test str index
-index_str = 'Rust Python'
+index_str = 'RustPython'
 
 assert index_str[0] == 'R'
 assert index_str[-1] == 'n'

@@ -561,7 +561,7 @@ __import__("io").TextIOWrapper(
         }
     } else {
         println!(
-            "Welcome to the magnificent Rust Python {} interpreter \u{1f631} \u{1f596}",
+            "Welcome to the magnificent RustPython {} interpreter \u{1f631} \u{1f596}",
             crate_version!()
         );
         shell::run_shell(&vm, scope)?;
